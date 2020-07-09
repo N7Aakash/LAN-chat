@@ -5,17 +5,8 @@ import java.util.HashMap;
 
 public class Echoer extends Thread{
 	private Socket socket;
-	private String sender;
-	private String reciever;
-	private Map<String,Socket> chatUser;
 	Echoer(Socket socket){
 		this.socket=socket;
-	}
-	Echoer(Socket socket,String sender,String reciever,Map<String,Socket> chatUser){
-		this.socket = socket;
-		this.sender = sender;
-		this.reciever = reciever;
-		this.chatUser = chatUser;
 	}
 	public void run(){
 		try{
@@ -23,12 +14,11 @@ public class Echoer extends Thread{
 			while(true)
 			{
 				String echoString = input.readLine();
-				if("exit".equals(echoString))
+				if("exit".equals(echoString)){
 					break;
-				if (chatUser!=null && chatUser.get(reciever)!=null) {
-					new EchoerOutput(chatUser.get(reciever),sender + ":" + echoString).start();
 				}
-				System.out.println(echoString);	
+				/**Every message processed through ServerProtocolThread is recieved here*/
+				System.out.println("Client Echoer: " + echoString);	
 			}
 		}catch(IOException e){
 			System.out.println("Issue:"+e);
@@ -36,12 +26,12 @@ public class Echoer extends Thread{
 		catch(Exception e){
 			System.out.println("Issue:"+e);
 		}
-		// finally{
-		// 	try{
-		// 		socket.close();
-		// 	}catch(IOException e){
-		// 		System.out.println("Issue:"+e);
-		// 	}
-		// }
+		finally{
+			try{
+				socket.close();
+			}catch(IOException e){
+				System.out.println("Issue:"+e);
+			}
+		}
 	}
 }

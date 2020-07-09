@@ -11,12 +11,6 @@ public class EchoerOutput extends Thread{
 	EchoerOutput(Socket socket){
 		this.socket=socket;
 	}
-
-	
-	EchoerOutput(Socket socket,String echoString){
-		this.socket=socket;
-		this.echoString = echoString;
-	}
 	public void run(){
 		try{
 			BufferedReader input=new BufferedReader(new InputStreamReader(System.in));
@@ -24,17 +18,14 @@ public class EchoerOutput extends Thread{
 
 			while(true)
 			{			
-				if (this.echoString.equals(" ")) {
-					Thread.sleep(500);
-					System.out.println("Please enter the name of the person and message separated by :");
-					String echo = input.readLine();
-					output.println(echo);
-				}else{
-					output.println(this.echoString);
-					this.echoString = " ";
-				}
-				if(echoString.equals("exit"))
-					break;	
+				Thread.sleep(500);
+				System.out.println("Please enter the name of the person and message separated by :");
+				String echo = input.readLine();
+				output.println(echo);
+				if ("exit".equals(echo)) {
+					System.out.println("Leaving WhatsApp");
+					break;																	
+				}												
 			}
 		}catch(IOException e){
 			System.out.println("Issue:"+e);
@@ -42,12 +33,12 @@ public class EchoerOutput extends Thread{
 		catch(Exception e){
 			System.out.println("Issue:"+e);
 		}
-		// finally{
-		// 	try{
-		// 		socket.close();
-		// 	}catch(IOException e){
-		// 		System.out.println("Issue:"+e);
-		// 	}
-		// }
+		finally{
+			try{
+				socket.close();
+			}catch(IOException e){
+				System.out.println("Issue:"+e);
+			}
+		}
 	}
 }

@@ -11,12 +11,15 @@ public class Client{
 			Socket socket = new Socket("localhost",7777);
 			BufferedReader input=new BufferedReader(new InputStreamReader(System.in));
 
+			/*Client's Name input**/
 			OutputStream out = socket.getOutputStream();
 			System.out.println("Please Enter your name:");
 			byte[] name = input.readLine().getBytes();
 			out.write(name);
 
+			/**InputStream to read data for this client*/
 		    new Echoer(socket).start();	
+		    /**OuputStream to write data to be sent by this client*/
 			new EchoerOutput(socket).start();
 			
 		}catch(SocketTimeoutException e){

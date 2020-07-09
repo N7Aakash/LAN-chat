@@ -16,14 +16,11 @@ public class ServerProtocolThread extends Thread {
     private Map<String,Socket> chatUser;
     private ArrayList<String> messages = new ArrayList<>();
     public ServerProtocolThread(Socket socket,String sender,Map<String,Socket> chatUser) {
-        super("ServerProtocolThread");
         this.socket = socket;
         this.chatUser = chatUser;
         this.sender = sender;
     }
-    
-    public void run() {
-
+    public void run(){
         try (
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(
@@ -33,44 +30,50 @@ public class ServerProtocolThread extends Thread {
             String inputLine = new String();
             String outputLine = new String();
             while(true){
+                /*Input recieved from client **/
                 inputLine = in.readLine();
                 System.out.println(inputLine);
-                String[] response = inputLine.split(":");
-                String reciever = response[0];
-                outputLine = response[1];
-                Socket recieverSocket = chatUser.get(reciever);
-                if (!chatUser.containsKey(reciever)) {
-                    out.println("User does not exists!!");
+                if ("exit".equals(inputLine)) {
+                    out.println("exit");
+                    break;
                 }else{
-                    ExecutorService service = Executors.newFixedThreadPool(1);
-                    Future<Socket> future = service.submit(new Callable<Socket>(){
-                        public Socket call() throws Exception{
-                            while(chatUser.get(reciever).isClosed()){
-                                continue;
+                    /*Reciever's name is extracted from input**/
+                    String[] response = inputLine.split(":");
+                    String reciever = response[0].trim();
+                    /*Condition to check whether the reciever is registered in our system**/
+                    if (!chatUser.containsKey(reciever)) {
+                        out.println("User does not exists!!");
+                    }else{
+                        /*Reciever's message is extracted from input**/
+                        outputLine = response[1];
+                        /*Reciever's socket is extracted from hashMap**/
+                        Socket recieverSocket = chatUser.get(reciever);
+
+                        ExecutorService service = Executors.newFixedThreadPool(1);
+                        Future<Socket> future = service.submit(new Callable<Socket>(){
+                            public Socket call() throws Exception{
+                                /*Waiting for the receiver socket if he/she is offline**/
+                                while(chatUser.get(reciever).isClosed()){
+                                    continue;
+                                }
+                                /*Returning Socket if reciever is online**/
+                                return chatUser.get(reciever);
                             }
-                            System.out.println(chatUser.get(reciever));
-                            return chatUser.get(reciever);
+                        });
+                        try{
+                             /*Future's get method waits until the receiver socket is available**/
+                             recieverSocket = future.get();
+                             /*Sending message to reciever using reciever's socket outputstream**/
+                             PrintWriter output = new PrintWriter(recieverSocket.getOutputStream(), true);
+                             output.println("Message from " + sender + " : " + outputLine);   
+                        }catch(Exception e){
+                            System.out.println("Issue : "+e.getMessage());
                         }
-                    });
-                    try{
-                         recieverSocket = future.get();
-                         PrintWriter output = new PrintWriter(recieverSocket.getOutputStream(), true);
-                         output.println(sender + " : " + outputLine);   
-                    }catch(Exception e){
-                        System.out.println("Issue : "+e.getMessage());
                     }
-                    
-                    
                 }
             }  
         } catch (IOException e) {
             e.printStackTrace();
-        // }finally{
-        //     try{
-        //     // socket.close();
-        //     }catch(IOException e){
-        //         System.out.println("Issue :" + e.getMessage());
-        //     }
         }
     }
 }
